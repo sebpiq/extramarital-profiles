@@ -2,6 +2,7 @@ import os
 import sys
 import csv
 import json
+import datetime
 
 if len(sys.argv) < 2:
     print('usage : python %s <slices_dir>' % sys.argv[0])
@@ -62,11 +63,11 @@ headers = [
 ]
 
 filter_headers = [
-    'createdon', #: 2002-10-25 23:27:21
+    #'createdon', #: 2002-10-25 23:27:21
     'nickname', # Lippy4u
     'first_name', # Christope R
     'last_name', # Ashley
-    'gender', # 2
+    #'gender', # 2
     'dob', # 1972-03-13
     'profile_caption',
     'pref_opento_abstract',
@@ -102,6 +103,10 @@ with open(file_path) as csvfile:
 
             row_count += 1
             row = [ row[i] for i in filter_indices ]
+            try:
+                row[3] = 'age %s' % int((datetime.datetime.now() - datetime.datetime.strptime(row[3], '%Y-%m-%d')).days / 365)
+            except ValueError:
+                row[3] = None
             rows_slice.append(row)
 
         with open(slice_file_path, 'w') as fd:

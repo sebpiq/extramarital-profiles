@@ -1,9 +1,17 @@
-var transitionMaxAmp = 0.0001 // 0.0001 is equivalent to 3200 rows
+var transitionMaxAmp = 0.00003 // 0.0001 is equivalent to 3200 rows
 
 ashleyData = {
   // [[<filename>, <startRow>, <endRow>], ...]
   metadata: null,
   totalRows: null,
+
+  initialize: function(done) {
+    $.getJSON('data/slices_metadata.json', function(data) {
+      ashleyData.metadata = data
+      ashleyData.totalRows = data.slice(-1)[0][2] // row end of last row give total rows
+      done()
+    })
+  },
 
   // `fromRow` must be smaller than `toRow`
   load: function(fromRow, toRow, done) {
@@ -46,12 +54,23 @@ ashleyData = {
     _loadNext()
   },
 
-  initialize: function(done) {
-    $.getJSON('data/slices_metadata.json', function(data) {
-      ashleyData.metadata = data
-      ashleyData.totalRows = data.slice(-1)[0][2] // row end of last row give total rows
-      done()
-    })
+  cleanCache: function() {
+    var filename
+    for(filename in this._cached) {
+      var dataSlice = this._cached[filename]
+      var found = false
+      Card.cards.some(function(card) {
+        if (card.rowIterator && card.rowIterator.dataSlices
+          && card.rowIterator.dataSlices.indexOf(dataSlice) !== -1) {
+          found = true
+          return true
+        }
+      })
+      if (found === false) {
+        console.log('cleaned cache for ', filename)
+        delete this._cached[filename]
+      }
+    }
   },
 
   _cached: {}
@@ -160,13 +179,13 @@ Card.prototype.randomTransition = function() {
   var sign = Math.random() > 0.5 ? -1 : 1
   var endRow = startRow + sign * (transitionMaxAmp * 0.05 + (transitionMaxAmp * 0.95) * Math.random()) * ashleyData.totalRows
   endRow = Math.round(endRow)
-  console.log(startRow, endRow, endRow - startRow)
-  this.transition(startRow, endRow, 2000)
+  this.transition(startRow, endRow, 4000)
 }
 
 // Instead, render all rows until next, and only then start transition
 Card.prototype.renderRow = function(row) {
-  var rowElem = $('<span class="row">' + row.join(', ') + '</span>')
+  var text = row.filter(function(v) { return !!v }).join(', ')
+  var rowElem = $('<span class="row">' + text + '</span>')
   this.el.append(rowElem)
 }
 
@@ -177,12 +196,19 @@ Card.prototype.inTransition = function() {
 
 
 $(function() {
+
+  // Loop triggering transitions
   setInterval(function() {
     Card.cards.forEach(function(card) {
-      if (!card.inTransition() && Math.random() > 0.99)
+      if (!card.inTransition() && Math.random() > 0.995)
         card.randomTransition()
     })
-  }, 200)
+  }, 400)
+
+  // Loop cleaning unused data
+  setInterval(function() {
+    ashleyData.cleanCache()
+  }, 5000)
 
   ashleyData.initialize(function(err) {
     console.log('initialized')
