@@ -142,15 +142,10 @@ Card.prototype.transition = function(startRow, endRow, duration) {
     while(row = self.rowIterator.next())
       self.renderRow(row)
 
-    if (self.rowIterator.direction === 'asc') {
-      self.el.animate({
-        scrollTop: self.el.get(0).scrollHeight - self.el.height() - 50 // little padding so text fills-up all space
-      }, duration, 'linear')
-    } else {
-      self.el.animate({
-        scrollTop: 0 + 50 // little padding so text fills-up all space
-      }, duration, 'linear')
-    }
+    self.el.scrollTop(0)
+    self.el.animate({
+      scrollTop: self.el.get(0).scrollHeight - self.el.height() - 50 // little padding so text fills-up all space
+    }, duration, 'linear')
 
   })
 
@@ -172,15 +167,7 @@ Card.prototype.randomTransition = function() {
 // Instead, render all rows until next, and only then start transition
 Card.prototype.renderRow = function(row) {
   var rowElem = $('<span class="row">' + row.join(', ') + '</span>')
-
-  // Next row, incrementing
-  if (this.rowIterator.direction === 'asc') {
-    this.el.append(rowElem)
-
-  // Next row, decrementing
-  } else {
-    this.el.prepend(rowElem)
-  }
+  this.el.append(rowElem)
 }
 
 // Return true if card has a current transition, false otherwise
@@ -190,15 +177,20 @@ Card.prototype.inTransition = function() {
 
 
 $(function() {
+  setInterval(function() {
+    Card.cards.forEach(function(card) {
+      if (!card.inTransition() && Math.random() > 0.99)
+        card.randomTransition()
+    })
+  }, 200)
+
   ashleyData.initialize(function(err) {
     console.log('initialized')
-    card = new Card($('#card'))
-
-    card.randomTransition()
-    setInterval(function() {
-      if (!card.inTransition()) {// && Math.random() > 0.95) {
+    $('.card').each(function(i, el) {
+      var card = new Card(el)
+      setTimeout(function() {
         card.randomTransition()
-      }
-    }, 100)
+      }, Math.random() * 10000)
+    })
   })
 })
