@@ -104,7 +104,7 @@ with open(file_path) as csvfile:
             row_count += 1
             row = [ row[i] for i in filter_indices ]
             try:
-                row[3] = 'age %s' % int((datetime.datetime.now() - datetime.datetime.strptime(row[3], '%Y-%m-%d')).days / 365)
+                row[3] = '(%s)' % int((datetime.datetime.now() - datetime.datetime.strptime(row[3], '%Y-%m-%d')).days / 365)
             except ValueError:
                 row[3] = None
             rows_slice.append(row)

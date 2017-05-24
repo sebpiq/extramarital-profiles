@@ -179,12 +179,13 @@ Card.prototype.randomTransition = function() {
   var sign = Math.random() > 0.5 ? -1 : 1
   var endRow = startRow + sign * (transitionMaxAmp * 0.05 + (transitionMaxAmp * 0.95) * Math.random()) * ashleyData.totalRows
   endRow = Math.round(endRow)
-  this.transition(startRow, endRow, 4000)
+  this.transition(startRow, endRow, 20000)
 }
 
 // Instead, render all rows until next, and only then start transition
 Card.prototype.renderRow = function(row) {
-  var text = row.filter(function(v) { return !!v }).join(', ')
+  var text = ' <b>' + row.slice(0, 4).filter(function(v) { return v && v.length }).join('') + '</b> '
+    + row.slice(4).filter(function(v) { return v && v.length }).join(' ')
   var rowElem = $('<span class="row">' + text + '</span>')
   this.el.append(rowElem)
 }
@@ -197,13 +198,29 @@ Card.prototype.inTransition = function() {
 
 $(function() {
 
+  function toGreyHex(num) {
+    num = Math.round(num)
+    var comp = num.toString(16)
+    if (comp.length === 1)
+      comp = '0' + comp
+    return '#' + comp + comp + comp
+  }
+
+  var cardCount = $('.card').length
+  /*$('.card').each(function(i, el) {
+    $(el).css({
+      'background-color': toGreyHex((i / cardCount) * 255),
+      color: toGreyHex(255 - (i / cardCount) * 255)
+    })
+  })*/
+
   // Loop triggering transitions
   setInterval(function() {
     Card.cards.forEach(function(card) {
       if (!card.inTransition() && Math.random() > 0.995)
         card.randomTransition()
     })
-  }, 400)
+  }, 600)
 
   // Loop cleaning unused data
   setInterval(function() {
